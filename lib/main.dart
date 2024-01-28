@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,6 +11,7 @@ Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
   // can be called before `runApp()`
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
 
   runApp(const MyApp());
 }
@@ -27,7 +29,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
       ),
-      home: const MyHomePage(),
+      home: const SafeArea(child: MyHomePage()),
     );
   }
 }
@@ -88,6 +90,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(100.0),
+        child: adMob(),
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Column(
@@ -202,5 +208,79 @@ class _FrontPageState extends State<FrontPage> {
         ),
       ],
     );
+  }
+}
+
+class adMob extends StatefulWidget {
+  const adMob({super.key});
+
+  @override
+  adMobState createState() => adMobState();
+}
+
+class adMobState extends State<adMob> {
+  BannerAd? _bannerAd;
+
+  final String _adUnitId = Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/6300978111'
+      : 'ca-app-pub-3940256099942544/2934735716';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAd();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Builder(builder: (context) {
+        if (_bannerAd != null) {
+          return SizedBox(
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          );
+        } else {
+          return SizedBox();
+        }
+      }),
+    );
+  }
+
+  /// Loads and shows a banner ad.
+  ///
+  /// Dimensions of the ad are determined by the AdSize class.
+  void _loadAd() async {
+    BannerAd(
+      adUnitId: _adUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        // Called when an ad is successfully received.
+        onAdLoaded: (ad) {
+          setState(() {
+            _bannerAd = ad as BannerAd;
+          });
+        },
+        // Called when an ad request failed.
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+        // Called when an ad opens an overlay that covers the screen.
+        onAdOpened: (Ad ad) {},
+        // Called when an ad removes an overlay that covers the screen.
+        onAdClosed: (Ad ad) {},
+        // Called when an impression occurs on the ad.
+        onAdImpression: (Ad ad) {},
+      ),
+    ).load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
   }
 }

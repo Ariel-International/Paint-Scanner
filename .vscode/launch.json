@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "Flutter (BISON)",
+            "program": "lib/main.dart",
+            "deviceId": "BISON2103135711",
+            "request": "launch",
+            "type": "dart"
+        }
+    ]
+}
