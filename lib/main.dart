@@ -200,7 +200,7 @@ class _FrontPageState extends State<FrontPage> {
           child: Image.asset('assets/no_photo.png'),
         ),
         Container(
-          color: Colors.amber,
+          color: Colors.blue,
           child: const SizedBox(
             height: 100,
             child: Center(child: Text('palette')),
