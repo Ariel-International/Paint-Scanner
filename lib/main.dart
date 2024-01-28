@@ -1,17 +1,20 @@
 import 'dart:async';
 import 'dart:io';
+
+import 'package:gal/gal.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
-import 'package:path_provider/path_provider.dart';
 
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
   // can be called before `runApp()`
   WidgetsFlutterBinding.ensureInitialized();
   MobileAds.instance.initialize();
+
+  // Request Permission
+  await Gal.requestAccess();
 
   runApp(const MyApp());
 }
@@ -42,34 +45,27 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _image = '';
   XFile? image;
-
-  final _globalKey = GlobalKey();
 
   Future<void> gallery(source) async {
     final ImagePicker picker = ImagePicker();
     image = (await picker.pickImage(
       source: source,
     ))!;
-    upState(image);
-  }
-
-  void upState(XFile? img) {
-    _image = img!.path;
     setState(() {});
   }
 
   void delState() {
-    _image = '';
+    image = null;
     setState(() {});
   }
 
   Future<void> saveState() async {
     if (image == null) return;
-    final String path = await getApplicationDocumentsDirectory().toString();
-    final String fileName = _image;
-    image!.saveTo('$path/$fileName');
+    File file = File(image!.path);
+
+    // Save to album
+    await Gal.putImage('$file', album: 'Paint Scanner');
   }
 
 /*
@@ -92,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(100.0),
-        child: adMob(),
+        child: AdMob(),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -100,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               Expanded(
                 child: FrontPage(
-                  image: _image,
+                  image: image,
                 ),
               ),
               SafeArea(
@@ -185,7 +181,7 @@ class FrontPage extends StatefulWidget {
     required this.image,
   });
 
-  final String image;
+  final XFile? image;
 
   @override
   State<FrontPage> createState() => _FrontPageState();
@@ -197,7 +193,13 @@ class _FrontPageState extends State<FrontPage> {
     return Column(
       children: [
         Expanded(
-          child: Image.asset('assets/no_photo.png'),
+          child: Builder(builder: (context) {
+            if (widget.image == null) {
+              return Image.asset('assets/no_photo.png');
+            } else {
+              return Image.file(File(widget.image!.path));
+            }
+          }),
         ),
         Container(
           color: Colors.blue,
@@ -211,14 +213,14 @@ class _FrontPageState extends State<FrontPage> {
   }
 }
 
-class adMob extends StatefulWidget {
-  const adMob({super.key});
+class AdMob extends StatefulWidget {
+  const AdMob({super.key});
 
   @override
-  adMobState createState() => adMobState();
+  AdMobState createState() => AdMobState();
 }
 
-class adMobState extends State<adMob> {
+class AdMobState extends State<AdMob> {
   BannerAd? _bannerAd;
 
   final String _adUnitId = Platform.isAndroid
@@ -243,7 +245,7 @@ class adMobState extends State<adMob> {
             child: AdWidget(ad: _bannerAd!),
           );
         } else {
-          return SizedBox();
+          return const SizedBox();
         }
       }),
     );

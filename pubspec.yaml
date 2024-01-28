@@ -11,6 +11,7 @@ dependencies:
   english_words: ^4.0.0
   flutter:
     sdk: flutter
+  gal: ^2.2.3
   google_mobile_ads: ^4.0.0
   image_gallery_saver: ^2.0.3
   image_picker: ^1.0.7

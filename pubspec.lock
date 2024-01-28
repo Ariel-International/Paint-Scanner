@@ -176,6 +176,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  gal:
+    dependency: "direct main"
+    description:
+      name: gal
+      sha256: d9a312c50feb63fcc1fca53da6a1e0a22864a22c79e735ba02297309d92ee631
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.3"
   google_mobile_ads:
     dependency: "direct main"
     description:
