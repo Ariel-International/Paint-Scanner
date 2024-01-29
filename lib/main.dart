@@ -65,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
     File file = File(image!.path);
 
     // Save to album
-    await Gal.putImage('$file', album: 'Paint Scanner');
+    await Gal.putImage(image!.path, album: 'Paint Scanner');
   }
 
 /*
@@ -87,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(100.0),
+        preferredSize: Size.fromHeight(120.0),
         child: AdMob(),
       ),
       body: LayoutBuilder(
@@ -105,16 +105,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      /*
-                      Column(children: [
-                        IconButton(
-                          icon: const Icon(Icons.palette),
-                          tooltip: 'View Photo',
-                          onPressed: () {},
-                        ),
-                        const Text('View Photo'),
-                      ]),
-                      */
                       Column(
                         children: [
                           IconButton(
@@ -146,6 +136,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             tooltip: 'Save Photo',
                             onPressed: () {
                               saveState();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Saved in "Paint Scanner" album'),
+                                ),
+                              );
                             },
                           ),
                           const Text('Save\nPhoto'),
@@ -235,19 +231,22 @@ class AdMobState extends State<AdMob> {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Builder(builder: (context) {
-        if (_bannerAd != null) {
-          return SizedBox(
-            width: _bannerAd!.size.width.toDouble(),
-            height: _bannerAd!.size.height.toDouble(),
-            child: AdWidget(ad: _bannerAd!),
-          );
-        } else {
-          return const SizedBox();
-        }
-      }),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Builder(builder: (context) {
+          if (_bannerAd != null) {
+            return SizedBox(
+              width: _bannerAd!.size.width.toDouble(),
+              height: _bannerAd!.size.height.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            );
+          } else {
+            return const SizedBox();
+          }
+        }),
+      ),
     );
   }
 
