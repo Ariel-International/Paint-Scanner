@@ -158,12 +158,16 @@ class FrontPage extends StatefulWidget {
 }
 
 class _FrontPageState extends State<FrontPage> {
+  void showPalette() {
+    const SnackBar(content: Text('palette'));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          Expanded(
+          Positioned(
             child: Builder(builder: (context) {
               if (widget.image == null) {
                 return Image.asset('assets/no_photo.png');
@@ -172,19 +176,24 @@ class _FrontPageState extends State<FrontPage> {
               }
             }),
           ),
-          Container(
-            color: Colors.blue,
-            child: const SizedBox(
-              height: 100,
-              child: Center(child: Text('palette')),
+          const Positioned(
+            child: Center(
+              child: SizedBox(
+                height: 100,
+                child: Center(child: Text('palette')),
+              ),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: const Icon(Icons.palette),
-      ),
+      floatingActionButton: widget.image == null
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                showPalette;
+              },
+              child: const Icon(Icons.palette),
+            ),
     );
   }
 }
