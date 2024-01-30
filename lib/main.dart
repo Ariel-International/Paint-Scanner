@@ -46,43 +46,39 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   XFile? image;
+  bool _image = false;
 
   Future<void> gallery(source) async {
     final ImagePicker picker = ImagePicker();
     image = (await picker.pickImage(
       source: source,
     ))!;
+    _image = (image != null);
     setState(() {});
   }
 
   void delState() {
     image = null;
+    _image = false;
     setState(() {});
   }
 
   Future<void> saveState() async {
     if (image == null) return;
-    File file = File(image!.path);
 
     // Save to album
     await Gal.putImage(image!.path, album: 'Paint Scanner');
+    showSaveSnack();
   }
 
-/*
-  _saveLocalImage() async {
-    RenderRepaintBoundary boundary =
-        _globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    
-    ui.Image image = await boundary.toImage();
-    ByteData? byteData =
-        await (image.toByteData(format: ui.ImageByteFormat.png));
-    if (byteData != null) {
-      final result =
-          await ImageGallerySaver.saveImage(byteData.buffer.asUint8List());
-      print(result);
-    }
+  void showSaveSnack() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Saved in "Paint Scanner" album'),
+      ),
+    );
   }
-*/
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,56 +103,34 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: [
                       Column(
                         children: [
-                          IconButton(
+                          ElevatedButton.icon(
                             icon: const Icon(Icons.photo_album),
-                            tooltip: 'Load Photo',
+                            label: const Text('Load Photo'),
                             onPressed: () {
                               gallery(ImageSource.gallery);
                             },
                           ),
-                          const Text('Load\nPhoto'),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          IconButton(
+                          ElevatedButton.icon(
                             icon: const Icon(Icons.photo_camera),
-                            tooltip: 'Take Photo',
+                            label: const Text('Take Photo'),
                             onPressed: () {
                               gallery(ImageSource.camera);
                             },
                           ),
-                          const Text('Take\nPhoto'),
                         ],
                       ),
                       Column(
                         children: [
-                          IconButton(
+                          ElevatedButton.icon(
                             icon: const Icon(Icons.save),
-                            tooltip: 'Save Photo',
-                            onPressed: () {
-                              saveState();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Saved in "Paint Scanner" album'),
-                                ),
-                              );
-                            },
+                            label: const Text('Save Photo'),
+                            onPressed: _image ? saveState : null,
                           ),
-                          const Text('Save\nPhoto'),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          IconButton(
+                          ElevatedButton.icon(
                             icon: const Icon(Icons.delete),
-                            tooltip: 'Delete Photo',
-                            onPressed: () {
-                              delState();
-                            },
+                            label: const Text('Delete Photo'),
+                            onPressed: _image ? delState : null,
                           ),
-                          const Text('Delete\nPhoto'),
                         ],
                       ),
                     ],
@@ -186,25 +160,31 @@ class FrontPage extends StatefulWidget {
 class _FrontPageState extends State<FrontPage> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: Builder(builder: (context) {
-            if (widget.image == null) {
-              return Image.asset('assets/no_photo.png');
-            } else {
-              return Image.file(File(widget.image!.path));
-            }
-          }),
-        ),
-        Container(
-          color: Colors.blue,
-          child: const SizedBox(
-            height: 100,
-            child: Center(child: Text('palette')),
+    return Scaffold(
+      body: Stack(
+        children: [
+          Expanded(
+            child: Builder(builder: (context) {
+              if (widget.image == null) {
+                return Image.asset('assets/no_photo.png');
+              } else {
+                return Image.file(File(widget.image!.path));
+              }
+            }),
           ),
-        ),
-      ],
+          Container(
+            color: Colors.blue,
+            child: const SizedBox(
+              height: 100,
+              child: Center(child: Text('palette')),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: const Icon(Icons.palette),
+      ),
     );
   }
 }
