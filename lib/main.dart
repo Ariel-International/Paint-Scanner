@@ -158,7 +158,12 @@ class FrontPage extends StatefulWidget {
 }
 
 class _FrontPageState extends State<FrontPage> {
+  bool _palette = false;
+
   void showPalette() {
+    setState(() {
+      _palette = !_palette;
+    });
     const SnackBar(content: Text('palette'));
   }
 
@@ -176,11 +181,44 @@ class _FrontPageState extends State<FrontPage> {
               }
             }),
           ),
-          const Positioned(
-            child: Center(
-              child: SizedBox(
-                height: 100,
-                child: Center(child: Text('palette')),
+          Opacity(
+            opacity: _palette ? 0.5 : 0.0,
+            child: const ModalBarrier(dismissible: false, color: Colors.black),
+          ),
+          Positioned(
+            child: Visibility(
+              visible: _palette,
+              child: Center(
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black,
+                        offset: Offset(
+                          5.0,
+                          5.0,
+                        ),
+                        blurRadius: 10.0,
+                        spreadRadius: 2.0,
+                      ),
+                      BoxShadow(
+                        color: Colors.white,
+                        offset: Offset(0.0, 0.0),
+                        blurRadius: 0.0,
+                        spreadRadius: 0.0,
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: SizedBox(
+                      height: 100,
+                      child: Center(child: Text('palette')),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -190,7 +228,7 @@ class _FrontPageState extends State<FrontPage> {
           ? null
           : FloatingActionButton(
               onPressed: () {
-                showPalette;
+                showPalette();
               },
               child: const Icon(Icons.palette),
             ),
