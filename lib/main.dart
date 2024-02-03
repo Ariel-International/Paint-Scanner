@@ -7,6 +7,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
@@ -26,7 +27,7 @@ Future<void> main() async {
   Future<List<dynamic>> getColors() async {
     String data = await rootBundle.loadString("assets/colors.json");
 
-    print(data.length);
+    //print(data.length);
     return jsonDecode(data);
   }
 
@@ -104,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(120.0),
+        preferredSize: Size.fromHeight(80.0),
         child: AdMob(),
       ),
       body: LayoutBuilder(
@@ -196,9 +197,9 @@ class _FrontPageState extends State<FrontPage> {
           Positioned(
             child: Builder(builder: (context) {
               if (widget.image == null) {
-                return Image.asset('assets/no_photo.png');
+                return const Image(image: AssetImage('assets/no_photo.png'));
               } else {
-                return Image.file(File(widget.image!.path));
+                return Center(child: Image.file(File(widget.image!.path)));
               }
             }),
           ),
@@ -298,11 +299,18 @@ class PaletteState extends State<Palette> {
         swatches.add(PaletteSwatch(color: color));
       }
 
+      return CarouselSlider(
+        options: CarouselOptions(height: 400.0),
+        items: swatches,
+      );
+    }
+
+    /*TBR by carousel
       return Wrap(
         direction: Axis.vertical,
         children: swatches,
       );
-    }
+      */
   }
 }
 
