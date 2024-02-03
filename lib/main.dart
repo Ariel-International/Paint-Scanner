@@ -6,6 +6,12 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:palette_generator/palette_generator.dart';
+
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
+
+List colors = [];
 
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
@@ -15,6 +21,21 @@ Future<void> main() async {
 
   // Request Permission
   await Gal.requestAccess();
+
+  //Load color tables
+  Future<List<dynamic>> getColors() async {
+    String data = await rootBundle.loadString("assets/colors.json");
+
+    print(data.length);
+    return jsonDecode(data);
+  }
+
+  colors = await getColors();
+
+  var it = colors.iterator;
+  while (it.moveNext()) {
+    print(it.current);
+  }
 
   runApp(const MyApp());
 }
@@ -212,10 +233,9 @@ class _FrontPageState extends State<FrontPage> {
                       ),
                     ],
                   ),
-                  child: const Center(
-                    child: SizedBox(
-                      height: 100,
-                      child: Center(child: Text('palette')),
+                  child: Center(
+                    child: Palette(
+                      image: widget.image,
                     ),
                   ),
                 ),
@@ -235,6 +255,77 @@ class _FrontPageState extends State<FrontPage> {
     );
   }
 }
+
+//Palette generator
+
+class Palette extends StatefulWidget {
+  const Palette({super.key, required this.image});
+
+  final XFile? image;
+
+  @override
+  PaletteState createState() => PaletteState();
+}
+
+class PaletteState extends State<Palette> {
+  final List<Widget> swatches = <Widget>[];
+  final List<Color> colors = <Color>[];
+  PaletteGenerator? paletteGenerator;
+
+  @override
+  void initState() {
+    super.initState();
+    _updatePaletteGenerator();
+  }
+
+  Future<void> _updatePaletteGenerator() async {
+    if (widget.image != null) {
+      paletteGenerator = await PaletteGenerator.fromImageProvider(
+        FileImage(File(widget.image!.path)),
+        maximumColorCount: 10,
+      );
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (paletteGenerator == null || paletteGenerator!.colors.isEmpty) {
+      return const Center(child: Text('Loading...'));
+    } else {
+      swatches.clear();
+      for (final Color color in paletteGenerator!.colors) {
+        swatches.add(PaletteSwatch(color: color));
+      }
+
+      return Wrap(
+        direction: Axis.vertical,
+        children: swatches,
+      );
+    }
+  }
+}
+
+@immutable
+class PaletteSwatch extends StatelessWidget {
+  /// Creates a PaletteSwatch.
+
+  const PaletteSwatch({
+    super.key,
+    this.color,
+    this.label,
+  });
+
+  final Color? color;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(color.toString());
+  }
+}
+
+//AdMob banner
 
 class AdMob extends StatefulWidget {
   const AdMob({super.key});
