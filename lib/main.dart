@@ -14,6 +14,16 @@ import 'package:flutter/services.dart' show rootBundle;
 
 List colors = [];
 
+List<String> paletteLabels = <String>[
+  "Dominant",
+  "Light Vibrant",
+  "Vibrant",
+  "Dark Vibrant",
+  "Light Muted",
+  "Muted",
+  "Dark Muted"
+];
+
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
   // can be called before `runApp()`
@@ -31,12 +41,8 @@ Future<void> main() async {
     return jsonDecode(data);
   }
 
+  //Load color tables
   colors = await getColors();
-
-  var it = colors.iterator;
-  while (it.moveNext()) {
-    print(it.current);
-  }
 
   runApp(const MyApp());
 }
@@ -189,6 +195,12 @@ class _FrontPageState extends State<FrontPage> {
     const SnackBar(content: Text('palette'));
   }
 
+  void resetPalette() {
+    setState(() {
+      _palette = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -283,7 +295,7 @@ class PaletteState extends State<Palette> {
     if (widget.image != null) {
       paletteGenerator = await PaletteGenerator.fromImageProvider(
         FileImage(File(widget.image!.path)),
-        maximumColorCount: 10,
+        maximumColorCount: paletteLabels.length - 1,
       );
       setState(() {});
     }
@@ -295,8 +307,22 @@ class PaletteState extends State<Palette> {
       return const Center(child: Text('Loading...'));
     } else {
       swatches.clear();
-      for (final Color color in paletteGenerator!.colors) {
-        swatches.add(PaletteSwatch(color: color));
+      int colNo = 0;
+
+      for (final PaletteColor color in paletteGenerator!.paletteColors) {
+        //Check color
+        var it = colors.iterator;
+        while (it.moveNext()) {
+          print(it.current);
+        }
+        swatches.add(
+          PaletteSwatch(
+            color: color.color,
+            pcolor: color.titleTextColor,
+            label: paletteLabels[colNo],
+          ),
+        );
+        colNo++;
       }
 
       return CarouselSlider(
@@ -321,15 +347,36 @@ class PaletteSwatch extends StatelessWidget {
   const PaletteSwatch({
     super.key,
     this.color,
+    this.pcolor,
     this.label,
   });
 
   final Color? color;
+  final Color? pcolor;
   final String? label;
 
   @override
   Widget build(BuildContext context) {
-    return Text(color.toString());
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            color: color,
+            height: 100.0,
+            child: Center(
+              child: Text(
+                label!,
+                style: TextStyle(color: pcolor),
+              ),
+            ),
+          ),
+        ),
+        Text(
+          '#${color.toString().substring(10, 16)}',
+        ),
+      ],
+    );
   }
 }
 
