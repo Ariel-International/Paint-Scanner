@@ -1,5 +1,7 @@
-import 'dart:async';
 import 'dart:io';
+import 'dart:core';
+import 'dart:math';
+import 'dart:developer' as debug;
 
 import 'package:gal/gal.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -12,7 +14,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
-List colors = [];
+List panColors = [];
+List ralColors = [];
 
 List<String> paletteLabels = <String>[
   "Dominant",
@@ -24,6 +27,9 @@ List<String> paletteLabels = <String>[
   "Dark Muted"
 ];
 
+//Palette visual switch
+bool palette = false;
+
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
   // can be called before `runApp()`
@@ -34,15 +40,16 @@ Future<void> main() async {
   await Gal.requestAccess();
 
   //Load color tables
-  Future<List<dynamic>> getColors() async {
-    String data = await rootBundle.loadString("assets/colors.json");
+  Future<List<dynamic>> getColors(String file) async {
+    String data = await rootBundle.loadString("assets/$file.json");
 
     //print(data.length);
     return jsonDecode(data);
   }
 
   //Load color tables
-  colors = await getColors();
+  panColors = await getColors('pantone');
+  ralColors = await getColors('ral');
 
   runApp(const MyApp());
 }
@@ -80,14 +87,16 @@ class _MyHomePageState extends State<MyHomePage> {
     final ImagePicker picker = ImagePicker();
     image = (await picker.pickImage(
       source: source,
-    ))!;
+    ));
     _image = (image != null);
+    palette = false;
     setState(() {});
   }
 
   void delState() {
     image = null;
     _image = false;
+    palette = false;
     setState(() {});
   }
 
@@ -97,6 +106,8 @@ class _MyHomePageState extends State<MyHomePage> {
     // Save to album
     await Gal.putImage(image!.path, album: 'Paint Scanner');
     showSaveSnack();
+    palette = false;
+    setState(() {});
   }
 
   void showSaveSnack() {
@@ -109,66 +120,75 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(80.0),
-        child: AdMob(),
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Column(
-            children: [
-              Expanded(
-                child: FrontPage(
-                  image: image,
-                ),
-              ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Column(
-                        children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.photo_album),
-                            label: const Text('Load Photo'),
-                            onPressed: () {
-                              gallery(ImageSource.gallery);
-                            },
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.photo_camera),
-                            label: const Text('Take Photo'),
-                            onPressed: () {
-                              gallery(ImageSource.camera);
-                            },
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.save),
-                            label: const Text('Save Photo'),
-                            onPressed: _image ? saveState : null,
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.delete),
-                            label: const Text('Delete Photo'),
-                            onPressed: _image ? delState : null,
-                          ),
-                        ],
-                      ),
-                    ],
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: const PreferredSize(
+            preferredSize: Size.fromHeight(80.0),
+            child: AdMob(),
+          ),
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: FrontPage(
+                      image: image,
+                    ),
                   ),
-                ),
-              )
-            ],
-          );
-        },
-      ),
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
+                            children: [
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.photo_album),
+                                label: const Text('Load Photo'),
+                                onPressed: () {
+                                  gallery(ImageSource.gallery);
+                                },
+                              ),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.photo_camera),
+                                label: const Text('Take Photo'),
+                                onPressed: () {
+                                  gallery(ImageSource.camera);
+                                },
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.save),
+                                label: const Text('Save Photo'),
+                                onPressed: _image ? saveState : null,
+                              ),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.delete),
+                                label: const Text('Delete Photo'),
+                                onPressed: _image ? delState : null,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              );
+            },
+          ),
+        ),
+        Visibility(
+          child: Text(
+            'Paint Scanner',
+          ),
+        ),
+      ],
     );
   }
 }
@@ -186,18 +206,16 @@ class FrontPage extends StatefulWidget {
 }
 
 class _FrontPageState extends State<FrontPage> {
-  bool _palette = false;
-
   void showPalette() {
     setState(() {
-      _palette = !_palette;
+      palette = !palette;
     });
     const SnackBar(content: Text('palette'));
   }
 
   void resetPalette() {
     setState(() {
-      _palette = false;
+      palette = false;
     });
   }
 
@@ -216,16 +234,16 @@ class _FrontPageState extends State<FrontPage> {
             }),
           ),
           Opacity(
-            opacity: _palette ? 0.5 : 0.0,
+            opacity: palette ? 0.5 : 0.0,
             child: const ModalBarrier(dismissible: false, color: Colors.black),
           ),
           Positioned(
             child: Visibility(
-              visible: _palette,
+              visible: palette,
               child: Center(
                 child: Container(
                   width: 300,
-                  height: 300,
+                  height: 400,
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     boxShadow: const [
@@ -282,7 +300,6 @@ class Palette extends StatefulWidget {
 
 class PaletteState extends State<Palette> {
   final List<Widget> swatches = <Widget>[];
-  final List<Color> colors = <Color>[];
   PaletteGenerator? paletteGenerator;
 
   @override
@@ -301,6 +318,75 @@ class PaletteState extends State<Palette> {
     }
   }
 
+  int panLine = 0; //Pantone Line number
+  int ralLine = 0; //RAL Line number
+  int line = 0;
+
+  String name = '';
+  var r = 0;
+  var g = 0;
+  var b = 0;
+
+  int sum = 0;
+  int diff = 0;
+  int dev = 0;
+  int mindev = 0;
+
+  //Compare colors
+  bool checkColor() {
+    dev = max(r, max(g, b)); //maximum deviation
+    sum = r + g + b;
+
+    debug.log('$line $name $r $g $b s=$sum d=$diff v=$dev m=$mindev');
+
+    return (sum < diff) && (dev <= mindev);
+  }
+
+  //Check Pantone color
+  String checkPantone(PaletteColor color) {
+    var it = panColors.iterator;
+    line = 0;
+    diff = 1024; //start from the top!!
+    mindev = 256; //also start from the top
+
+    while (it.moveNext()) {
+      name = it.current[0];
+      r = (it.current[2] - color.color.red).abs();
+      g = (it.current[3] - color.color.green).abs();
+      b = (it.current[4] - color.color.blue).abs();
+
+      if (checkColor()) {
+        panLine = line;
+        diff = sum;
+        mindev = dev;
+      }
+      line++;
+    }
+    return '0xff${panColors[panLine][1]}';
+  }
+
+  //Check RAL color
+  String checkRal(PaletteColor color) {
+    var it = ralColors.iterator;
+    line = 0;
+    diff = 1024; //start from the top!!
+    mindev = 256; //also start from the top
+
+    while (it.moveNext()) {
+      r = (it.current[3] - color.color.red).abs();
+      g = (it.current[4] - color.color.green).abs();
+      b = (it.current[5] - color.color.blue).abs();
+
+      if (checkColor()) {
+        ralLine = line;
+        diff = sum;
+        mindev = dev;
+      }
+      line++;
+    }
+    return '0xff${ralColors[ralLine][2]}';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (paletteGenerator == null || paletteGenerator!.colors.isEmpty) {
@@ -310,16 +396,19 @@ class PaletteState extends State<Palette> {
       int colNo = 0;
 
       for (final PaletteColor color in paletteGenerator!.paletteColors) {
-        //Check color
-        var it = colors.iterator;
-        while (it.moveNext()) {
-          print(it.current);
-        }
+        String pan = checkPantone(color);
+        String ral = checkRal(color);
+
         swatches.add(
           PaletteSwatch(
-            color: color.color,
-            pcolor: color.titleTextColor,
             label: paletteLabels[colNo],
+            color: color.color,
+            tcolor: color.titleTextColor,
+            plabel: panColors[panLine][0],
+            pcolor: Color(int.parse(pan)),
+            rnum: ralColors[ralLine][0],
+            rlabel: ralColors[ralLine][1],
+            rcolor: Color(int.parse(ral)),
           ),
         );
         colNo++;
@@ -330,13 +419,6 @@ class PaletteState extends State<Palette> {
         items: swatches,
       );
     }
-
-    /*TBR by carousel
-      return Wrap(
-        direction: Axis.vertical,
-        children: swatches,
-      );
-      */
   }
 }
 
@@ -346,34 +428,74 @@ class PaletteSwatch extends StatelessWidget {
 
   const PaletteSwatch({
     super.key,
-    this.color,
-    this.pcolor,
     this.label,
+    this.color,
+    this.tcolor,
+    this.pcolor,
+    this.plabel,
+    this.rnum,
+    this.rlabel,
+    this.rcolor,
   });
 
   final Color? color;
+  final Color? tcolor;
   final Color? pcolor;
+  final String? plabel;
   final String? label;
+  final int? rnum;
+  final String? rlabel;
+  final Color? rcolor;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            color: color,
-            height: 100.0,
-            child: Center(
-              child: Text(
-                label!,
-                style: TextStyle(color: pcolor),
-              ),
-            ),
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            label!,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
         Text(
-          '#${color.toString().substring(10, 16)}',
+          'RGB: #${color.toString().substring(10, 16)}',
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            color: color,
+            height: 50.0,
+          ),
+        ),
+        Text(
+          'Pantone: $plabel',
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            color: pcolor,
+            height: 50.0,
+          ),
+        ),
+        Text(
+          'RAL: $rlabel',
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            color: rcolor,
+            height: 50.0,
+            child: Center(
+                child: Text(
+              rnum.toString(),
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+                foreground: Paint()..color = tcolor!,
+              ),
+            )),
+          ),
         ),
       ],
     );

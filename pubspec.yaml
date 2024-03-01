@@ -1,5 +1,5 @@
 name: paint_scanner
-description: "A new Flutter project."
+description: "Color image recognition."
 publish_to: 'none'
 version: 0.1.0
 
@@ -7,10 +7,7 @@ environment:
   sdk: '>=3.2.4 <4.0.0'
 
 dependencies:
-  camera: ^0.10.5+9
   carousel_slider: ^4.2.1
-  cross_file_image: ^1.1.0
-  english_words: ^4.0.0
   flutter:
     sdk: flutter
   gal: ^2.2.3
