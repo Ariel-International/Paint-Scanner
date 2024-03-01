@@ -76,14 +76,36 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(
-        const Duration(seconds: 3),
+        const Duration(seconds: 5),
         () => Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => const PaintScanner())));
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text("This is the splash screen"));
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Container(
+        decoration: const BoxDecoration(color: Colors.white),
+        child: Column(
+          children: [
+            const SizedBox(height: 100),
+            Image.asset('assets/splash.png'),
+            Image.asset('assets/title.png'),
+            const Text(
+              'V. 1.0\r\n\u00a9 2024 Ariel.international ltd',
+              textAlign: TextAlign.left,
+              style: TextStyle(
+                fontFamily: 'Courier',
+                fontSize: 10,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
