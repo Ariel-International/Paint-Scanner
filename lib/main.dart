@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:core';
 import 'dart:math';
@@ -57,7 +58,39 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(home: SplashScreen());
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Timer(
+        const Duration(seconds: 3),
+        () => Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const PaintScanner())));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: Text("This is the splash screen"));
+  }
+}
+
+// This widget is the root of the application,called by SplashScreen
+class PaintScanner extends StatelessWidget {
+  const PaintScanner({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -120,75 +153,66 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Scaffold(
-          appBar: const PreferredSize(
-            preferredSize: Size.fromHeight(80.0),
-            child: AdMob(),
-          ),
-          body: LayoutBuilder(
-            builder: (context, constraints) {
-              return Column(
-                children: [
-                  Expanded(
-                    child: FrontPage(
-                      image: image,
-                    ),
-                  ),
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Scaffold(
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(80.0),
+        child: AdMob(),
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            children: [
+              Expanded(
+                child: FrontPage(
+                  image: image,
+                ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Column(
                         children: [
-                          Column(
-                            children: [
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.photo_album),
-                                label: const Text('Load Photo'),
-                                onPressed: () {
-                                  gallery(ImageSource.gallery);
-                                },
-                              ),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.photo_camera),
-                                label: const Text('Take Photo'),
-                                onPressed: () {
-                                  gallery(ImageSource.camera);
-                                },
-                              ),
-                            ],
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.photo_album),
+                            label: const Text('Load Photo'),
+                            onPressed: () {
+                              gallery(ImageSource.gallery);
+                            },
                           ),
-                          Column(
-                            children: [
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.save),
-                                label: const Text('Save Photo'),
-                                onPressed: _image ? saveState : null,
-                              ),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.delete),
-                                label: const Text('Delete Photo'),
-                                onPressed: _image ? delState : null,
-                              ),
-                            ],
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.photo_camera),
+                            label: const Text('Take Photo'),
+                            onPressed: () {
+                              gallery(ImageSource.camera);
+                            },
                           ),
                         ],
                       ),
-                    ),
-                  )
-                ],
-              );
-            },
-          ),
-        ),
-        Visibility(
-          child: Text(
-            'Paint Scanner',
-          ),
-        ),
-      ],
+                      Column(
+                        children: [
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.save),
+                            label: const Text('Save Photo'),
+                            onPressed: _image ? saveState : null,
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.delete),
+                            label: const Text('Delete Photo'),
+                            onPressed: _image ? delState : null,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            ],
+          );
+        },
+      ),
     );
   }
 }

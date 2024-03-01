@@ -2,7 +2,7 @@
     <application
         android:label="paint_scanner"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/launcher_icon"
         android:requestLegacyExternalStorage="true">
         
         <!-- Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713 -->
