@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:convert';
 import 'dart:developer' as debug;
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:gal/gal.dart';
@@ -32,7 +33,21 @@ List<String> paletteLabels = <String>[
 ];
 
 //Debug flag
-bool db = true;
+bool db = kDebugMode;
+
+//Ads
+String rewAd = Platform.isAndroid
+    ? (db
+        ? 'ca-app-pub-3940256099942544/5224354917'
+        : 'ca-app-pub-8888925025874976/6066629527')
+    : (db ? 'ca-app-pub-3940256099942544/1712485313' : '');
+
+String banAd = Platform.isAndroid
+    ? (db
+        ? 'ca-app-pub-3940256099942544/6300978111'
+        : 'ca-app-pub-8888925025874976/2338303351')
+    : (db ? 'ca-app-pub-3940256099942544/2934735716' : '');
+
 SharedPreferences? prefs;
 
 void loadPrefs() {
@@ -95,7 +110,7 @@ Future<void> main() async {
   MobileAds.instance.initialize();
 
   // Request Permission
-  await Gal.requestAccess();
+  await Gal.requestAccess(toAlbum: true);
 
   //Load color tables
   Future<List<dynamic>> getColors(String file) async {
@@ -169,9 +184,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   //Add credit from webpage
   void webCredit() {
-    visible = true;
-    splashTimer!.cancel();
-    _focusNode.requestFocus();
+    //visible = true;
+    //splashTimer!.cancel();
+    //_focusNode.requestFocus();
     _launchUrl('https://ariel.international/ps?id=$appID');
     setState(() {});
   }
@@ -232,7 +247,7 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
         body: Stack(children: [
           Center(child: splashImg!),
-          Opacity(
+/*          Opacity(
             opacity: visible ? 0.5 : 0.0,
             child: const ModalBarrier(dismissible: false, color: Colors.black),
           ),
@@ -252,6 +267,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
           ),
+*/
         ]),
         bottomNavigationBar: BottomAppBar(
           padding: EdgeInsets.zero,
@@ -344,6 +360,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if ((counter > 0) || adBlock) {
       XFile? newImage = (await picker.pickImage(
         source: source,
+        maxWidth: 360,
+        maxHeight: 470,
+        imageQuality: 50,
       ));
       if (newImage == null) return;
       XFile? oldImage = image;
@@ -390,9 +409,12 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: adBlock
           ? null
-          : const PreferredSize(
-              preferredSize: Size.fromHeight(80.0),
-              child: AdMob(),
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(80.0),
+              child: Container(
+                decoration: BoxDecoration(color: Colors.lime.shade100),
+                child: const AdMob(),
+              ),
             ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -480,9 +502,8 @@ class FrontPage extends StatefulWidget {
 class _FrontPageState extends State<FrontPage> {
   RewardedAd? _rewardedAd;
 
-  final String _adRewardedId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/5224354917'
-      : 'ca-app-pub-3940256099942544/1712485313';
+  //Select test or productionads for android and IOS
+  final String _adRewardedId = rewAd;
 
   @override
   void initState() {
@@ -730,16 +751,21 @@ class PaletteState extends State<Palette> {
   @override
   void initState() {
     super.initState();
+    debug.log('pre');
     _updatePaletteGenerator();
+    debug.log('post');
   }
 
   Future<void> _updatePaletteGenerator() async {
     if (widget.image != null) {
-      await Future.delayed(const Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 2));
+      debug.log('start');
       paletteGenerator = await PaletteGenerator.fromImageProvider(
         FileImage(File(widget.image!.path)),
         maximumColorCount: paletteLabels.length - 1,
       );
+      debug.log('end');
+
       int panLine = 0; //Pantone Line number
       int ralLine = 0; //RAL Line number
       int line = 0;
@@ -1021,10 +1047,7 @@ class AdMob extends StatefulWidget {
 class AdMobState extends State<AdMob> {
   BannerAd? _bannerAd;
 
-  final String _adBannerId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/6300978111'
-      : 'ca-app-pub-3940256099942544/2934735716';
-
+  final String _adBannerId = banAd;
   @override
   void initState() {
     super.initState();
@@ -1034,16 +1057,12 @@ class AdMobState extends State<AdMob> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.only(top: 8.0),
       child: Align(
         alignment: Alignment.topCenter,
         child: Builder(builder: (context) {
           if (_bannerAd != null) {
-            return SizedBox(
-              width: _bannerAd!.size.width.toDouble(),
-              height: _bannerAd!.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
-            );
+            return AdWidget(ad: _bannerAd!);
           } else {
             return const SizedBox();
           }
